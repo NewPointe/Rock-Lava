@@ -1,0 +1,227 @@
+{% comment %}
+    
+    CalendarView.lava
+    
+    A Calendar View for Rock's "Calendar Lava" block. Supports Month and Week views and
+    allows customizing the first day of the week.
+
+{% endcomment %}
+
+{% assign EventItemOccurrencesCount = EventItemOccurrences | Size %}
+{% if EventItemOccurrencesCount <= 0 %}
+    
+    <div class="margin-t-md alert alert-warning">
+        No events found for the selected dates.
+    </div>
+    
+{% else %}
+    
+    {% comment %}----------------- Calendar Settings -----------------{% endcomment %}
+    {% comment %} The first day of the week. 0 = Sunday, 1 = Monday, etc. (This should be set to the same thing in the block properties or your week view might be missing events!){% endcomment %}
+    {% assign FirstDayOfWeek = 0 %}
+    
+    {% comment %} The date to center the calendar around. Uses the date of the first event since it's not directly passed to us. {% endcomment %}
+    {% assign CalendarDate = EventItemOccurrences[0].Date %}
+    
+    {% comment %} The view that the calendar should show. Uses the timeframe passed to us. Supports 'Week' and 'Month' views. {% endcomment %}
+    {% assign CalendarView = TimeFrame %}
+    
+    
+    {% comment %}-------------------- Math Magic ---------------------{% endcomment %}
+    
+    {% assign YMD = 'yyyyMMdd' %}
+    {% assign TodaysDateYMD = 'Now' | Date:YMD %}
+    {% if CalendarView == 'Week' %}
+        {% assign FirstDateOfThisWeek = CalendarDate | DateAdd:1,'d' | SundayDate | DateAdd:-7,'d' | DateAdd:FirstDayOfWeek,'d' %}
+        {% assign DaysOffset = FirstDateOfThisWeek | DateDiff:CalendarDate,'d' %}
+        {% if DaysOffset < 0 %}
+            {% assign FirstDateOfThisWeek = FirstDateOfThisWeek | DateAdd:-7,'d' %}
+        {% endif %}
+        {% assign LastDayOfThisWeek = FirstDateOfThisWeek | DateAdd:6,'d' %}
+        {% assign FirstDayOfThisWeek_Month = FirstDateOfThisWeek | Date:'MM' %}
+        {% assign LastDayOfThisWeek_Month = FirstDateOfThisWeek | Date:'MM' %}
+        {% if FirstDayOfThisWeek_Month == LastDayOfThisWeek_Month %}{% assign ShowMonth = false %}{% else %}{% assign ShowMonth = true %}{% endif %}
+    {% else %}
+        {% assign ThisMonth_Day = CalendarDate | Date:'dd' %}
+        {% assign ThisMonth_Month = CalendarDate | Date:'MM' %}
+        {% assign ThisMonth_Year = CalendarDate | Date:'yyyy' %}
+        {% assign NextMonth_Month = ThisMonth_Month | Plus:1 %}
+        {% assign NextMonth_Year = ThisMonth_Year %}
+        {% if NextMonth_Month > 12 %}
+            {% assign NextMonth_Month = NextMonth_Month | Minus:12 %}
+            {% assign NextMonth_Year = NextMonth_Year | Plus:1 %}
+        {% endif %}
+        {% capture FirstDayOfThisMonth %}{{ ThisMonth_Year }}-{{ ThisMonth_Month }}-01{% endcapture %}
+        {% capture FirstDayOfNextMonth %}{{ NextMonth_Year }}-{{ NextMonth_Month }}-01{% endcapture %}
+        {% assign LastDayOfThisMonth = FirstDayOfNextMonth | DateAdd:-1,'d' %}
+        {% assign DaysInThisMonth = LastDayOfThisMonth | Date:'dd' %}
+        {% assign FirstSundayOfThisMonth = FirstDayOfThisMonth | SundayDate %}
+        {% assign FirstWeekdayOfThisMonth = FirstSundayOfThisMonth | DateDiff:FirstDayOfThisMonth,'d' | Plus:7 | Minus:FirstDayOfWeek | Modulo:7 %}
+        {% assign CalendarDaysBack = FirstWeekdayOfThisMonth | Plus:ThisMonth_Day %}
+        {% assign DaysInThisCalendar = FirstWeekdayOfThisMonth | Plus:DaysInThisMonth %}
+        {% assign WeeksInThisCalendar = DaysInThisCalendar | DividedBy:7 | Ceiling %}
+    {% endif %}
+    
+    
+    {% comment %}--------------------- Calendar ----------------------{% endcomment %}
+    <style>
+        .event-block {
+            text-align: center;
+            color: white;
+            background-color: #4099AD;
+            margin: 8px -8px -7px;
+            padding: 2px 4px;
+        }
+    </style>
+    
+    <table class="margin-t-md table table-bordered">
+        
+        {% comment %}---------- Month/Week Header ----------{% endcomment %}
+        <thead>
+            <th colspan="7" style="text-align:center">
+                {% if CalendarView == 'Week' %}
+                    WEEK OF {{ FirstDateOfThisWeek | Date:'MMMM dd, yyyy' | Upcase }}
+                {% else %}
+                    {{ CalendarDate | Date:'MMMM yyyy' | Upcase }}
+                {% endif %}
+            </th>
+        </thead>
+        
+        {% comment %}---------- Weekday Header ----------{% endcomment %}
+        <thead>
+            {% assign Weekdays = "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday," %}
+            {% assign Weekdays = Weekdays | Append:Weekdays | Split:',' %}
+            {% for Weekday in Weekdays limit:7 offset:FirstDayOfWeek %}
+                <th style="width:14.28%; text-align:center;">{{ Weekday | Upcase }}</th>
+            {% endfor %}
+        </thead>
+        
+        {% comment %} Calendar body {% endcomment %}
+        <tbody>
+            {% if CalendarView == 'Week' %}
+                {% comment %}-------------------- Week View --------------------{% endcomment %}
+            
+                {% assign eventCount = 0 %}
+                <tr>
+                    {% comment %}---------- Day Loop ----------{% endcomment %}
+                    
+                    {% for day in (0..6) %}
+                        
+                        {% assign CurrentCalendarDate = FirstDateOfThisWeek | DateAdd:day,'d' %}
+                        {% assign CurrentCalendarDateYMD = CurrentCalendarDate | Date:YMD %}
+                        
+                        <td {% if CurrentCalendarDateYMD == TodaysDateYMD %}style="background-color: #c4f3ce;"{% endif %}>
+                            
+                            {% if ShowMonth %}{{ CurrentCalendarDate | Date:'MMMM d' }}{% else %}{{ CurrentCalendarDate | Date:'d' }}{% endif %}
+                            
+                            {% comment %}---------- Event Loop ----------{% endcomment %}
+                            
+                            {% comment %} We don't have a usable lava filter, so loop though all the events and check if they're for the current calendar date. {% endcomment %}
+                            {% comment %} Since the events are sorted, we can skip by the number of events we've already found to improve preformance. {% endcomment %}
+                            
+                            {% for EventItemSummary in EventItemOccurrences offset:eventCount %}
+                            
+                                {% assign EventItemDateYMD = EventItemSummary.DateTime | Date:YMD %}
+                                {% if EventItemDateYMD == CurrentCalendarDateYMD %}
+                                
+                                    {% assign eventCount = eventCount | Plus:1 %}
+                                    
+                                    {% comment %}---------- Event Display ----------{% endcomment %}
+                                    <a href="{{ DetailsPage }}?EventItemId={{ EventItemSummary.EventItemOccurrence.EventItem.Id }}&EventItemOccurrenceId={{ EventItemSummary.EventItemOccurrence.Id }}">
+                                        <div class="event-block">
+                                            <small>{{ EventItemSummary.Time }}</small><br />{{ EventItemSummary.Name }}
+                                        </div>
+                                    </a>
+                                    {% comment %}---------- End Event Display ----------{% endcomment %}
+                                    
+                                {% elseif eventItemDate > CurrentCalendarDate %}
+                                    {% comment %} Since the events are sorted, we can skip the remaining events in this loop as soon as we find one past the current calendar date. This realy helps preformance. {% endcomment %}
+                                    {% break %}
+                                {% endif %}
+                                
+                            {% endfor %}
+                            
+                            {% comment %}---------- End Event Loop ----------{% endcomment %}
+                            
+                        </td>
+                    {% endfor %}
+                    {% comment %}---------- End Day Loop ----------{% endcomment %}
+                    
+                </tr>
+                {% comment %}---------- End Week View ----------{% endcomment %}
+                
+            {% else %}
+            
+                {% comment %}---------- Month View ----------{% endcomment %}
+                
+                {% assign eventCount = 0 %}
+                {% assign LoopWeeks = WeeksInThisCalendar | Minus:1 %}
+                
+                {% comment %}---------- Week Loop ----------{% endcomment %}
+                
+                {% for week in (0..LoopWeeks) %}
+                    <tr>
+                        
+                        {% comment %}---------- Day Loop ----------{% endcomment %}
+                        
+                        {% for day in (0..6) %}
+                            {% assign CalendarDaysForward = week | Times:7 | Plus:day | Plus:1 %}
+                            {% assign CurrentCalendarDay = CalendarDaysForward | Minus:FirstWeekdayOfThisMonth %}
+                            
+                            {% if CurrentCalendarDay <= 0 or CurrentCalendarDay > DaysInThisMonth %}
+                                {% comment %} Grey out days from other months {% endcomment %}
+                                <td style="background-color: #eee;" ></td>
+                            {% else %}
+                                
+                                {% capture CurrentCalendarDate %}{{ ThisMonth_Year }}-{{ ThisMonth_Month }}-{{ CurrentCalendarDay }}{% endcapture %}
+                                {% assign CurrentCalendarDateYMD = CurrentCalendarDate | Date:YMD %}
+                                
+                                <td {% if CurrentCalendarDateYMD == TodaysDateYMD %}style="background-color: #c4f3ce;"{% endif %}>
+                                    
+                                    {{ CurrentCalendarDay }}
+                                                                
+                                    {% comment %}---------- Event Loop ----------{% endcomment %}
+                                    
+                                    {% comment %} We don't have a usable lava filter, so loop though all the events and check if they're for the current calendar date. {% endcomment %}
+                                    {% comment %} Since the events are sorted, we can skip by the number of events we've already found to improve preformance. {% endcomment %}
+                                    
+                                    {% for eventItemSummary in EventItemOccurrences offset:eventCount%}
+                                        {% assign EventItemDateYMD = eventItemSummary.DateTime | Date:YMD %}
+                                        {% if EventItemDateYMD == CurrentCalendarDateYMD %}
+                                        
+                                            {% assign eventCount = eventCount | Plus:1 %}
+                                            
+                                            {% comment %}---------- Event Display ----------{% endcomment %}
+                                            <a href="{{ DetailsPage }}?EventItemId={{ eventItemSummary.EventItemOccurrence.EventItem.Id }}&EventItemOccurrenceId={{ eventItemSummary.EventItemOccurrence.Id }}">
+                                                <div class="event-block">
+                                                    <small>{{ eventItemSummary.Time }}</small><br />{{ eventItemSummary.Name }}
+                                                </div>
+                                            </a>
+                                            {% comment %}---------- End Event Display ----------{% endcomment %}
+                                    
+                                        {% elseif EventItemDateYMD > CurrentCalendarDateYMD %}
+                                            {% comment %} Since the events are sorted, we can skip the remaining events in this loop as soon as we find one past the current calendar date. This realy helps preformance. {% endcomment %}
+                                            {% break %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% comment %}---------- End Event Loop ----------{% endcomment %}
+                                    
+                                </td>
+                            {% endif %}
+                            
+                        {% endfor %}
+                        {% comment %}---------- End Day Loop ----------{% endcomment %}
+                    
+                    </tr>
+                {% endfor %}
+                {% comment %}---------- End Week Loop ----------{% endcomment %}
+                    
+                {% comment %}---------- End Month View ----------{% endcomment %}
+            {% endif %}
+        </tbody>
+    </table>
+    
+    {% comment %}--------------------- End Calendar ----------------------{% endcomment %}
+    
+{% endif %}

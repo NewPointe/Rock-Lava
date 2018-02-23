@@ -1,0 +1,23 @@
+{% comment %}
+    If you want to test how an email will look in the Lava Tester, some of
+    the styles on the page can interfere with how things look. We can fix
+    that by completely isolating our output inside an iframe. (This can be used
+    for anything else you want to see isolated styles on too!)
+{% endcomment %}
+
+{% capture html %}
+
+
+
+
+{{ 'Global' | Attribute:'EmailHeader' }}
+
+<h2>Hello {{ Person.FullName }}!</h2>
+<p>How are you today?</p>
+
+{{ 'Global' | Attribute:'EmailFooter' }}
+
+
+
+
+{% endcapture %}<iframe style="width:100%; height:800px;" srcdoc="{{ html | Escape }}" />

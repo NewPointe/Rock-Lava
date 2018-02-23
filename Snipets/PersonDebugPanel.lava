@@ -1,0 +1,23 @@
+<section class="panel panel-note">
+	<div class="panel-heading clearfix">
+		<h3 class="panel-title">
+			<i class="fa fa-user"></i> Person Debug
+		</h3>
+	</div>
+	<div class="panel-body">
+	    <strong>Person Id: </strong>{{ Context.Person.Id }}<br />
+	    <strong>Person Guid: </strong>{{ Context.Person.Guid }}<br />
+	    {% assign urlEncodedKey = Context.Person.UrlEncodedKey %}
+	    <strong>URL Encoded Key: </strong>{{ urlEncodedKey }} <br />
+	    (<a href="{{ 'Global' | Attribute:'PublicApplicationRoot' }}?rckipid={{ urlEncodedKey }}" target="_blank">{{ 'Global' | Attribute:'PublicApplicationRoot' }}</a>) (<a href="{{ 'Global' | Attribute:'InternalApplicationRoot' }}?rckipid={{ urlEncodedKey }}" target="_blank">{{ 'Global' | Attribute:'InternalApplicationRoot' }}</a>)<br />
+	    <strong>Primary Person Alias Id: </strong>{{ Context.Person.PrimaryAliasId }}<br />
+	    <strong>Primary Person Alias Guid: </strong>{{ Context.Person.PrimaryAlias.Guid }}<br />
+	    <strong>Giving Id: </strong>{{ Context.Person.GivingId }}<br /> 
+	    <strong>Giving Group Id: </strong><a href="{{ 'Global' | Attribute:'InternalApplicationRoot' }}/GroupViewer?GroupId={{ Context.Person.GivingGroupId }}" target="_blank">{{ Context.Person.GivingGroupId }}</a><br />
+	    <strong>Giving Leader Id: </strong>{{ Context.Person.GivingLeaderId }} <br />
+	    <strong>User Names: </strong>
+	    {% for user in Context.Person.Users %}
+	        [{{ user.UserName }}], 
+	    {% endfor %}<br />
+	</div>
+</section>
