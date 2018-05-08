@@ -1,5 +1,7 @@
 {% comment %}
+
     This is the basic, built-in method. It just loops over the AttributeValues.
+
 {% endcomment %}
 
 {% for AttributeValue in Entity.AttributeValues %}
@@ -8,9 +10,11 @@
 
 
 {% comment %}
+
     If you want to do more complex things, like filtering out attributes marked for
     Grid Columns or sorting by the Order property of an attribute, we'll need to switch
     things up a bit and work with the Attributes themselves instead of the AttributeValues:
+    
 {% endcomment %}
 
 {% assign Attributes = Entity | Property:'Attributes.Values' | Where:'IsGridColumn',true | Sort:'Order' %}

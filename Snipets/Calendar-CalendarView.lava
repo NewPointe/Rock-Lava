@@ -1,6 +1,6 @@
 {% comment %}
     
-    CalendarView.lava
+    Calendar-CalendarView.lava
     
     A Calendar View for Rock's "Calendar Lava" block. Supports Month and Week views and
     allows customizing the first day of the week.

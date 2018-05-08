@@ -9,7 +9,8 @@
         Note: This is not for generic iCal data - It's only designed to handle Rock Schedules.
 
         @example
-            {% include '~/Plugins/org_newpointe/Lava/iCalParse' iCalendarContent:EventItemOccurrence.Schedule.iCalendarContent %}
+            {% include '~/Plugins/org_newpointe/Lava/Functions/iCalParse' iCalendarContent:EventItemOccurrence.Schedule.iCalendarContent %}
+            
             The event starts at {{ iCalParse_eventStart | Date:'h:mm tt' }}, ends at {{ iCalParse_eventEnd | Date:'h:mm tt' }},
             and reoccurs on {% for date in iCalParse_recurringDates %}{{ date | Date:'MMMM d, yyyy' }},{% endfor %}
 

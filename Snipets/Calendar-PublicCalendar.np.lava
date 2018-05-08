@@ -1,0 +1,121 @@
+<style>
+    @media (min-width: 768px) {
+        .calendar-lava > .block-content > div > .row > .col-md-3 {
+            width: 50%
+        }
+    }
+    .calendar-lava > .block-content > div > .row > .col-md-9 {
+        display: block;
+        margin: auto;
+        float: none;
+        width: 100%;
+        clear: both;
+    }
+    .calendar-lava .calendar-month a {
+        padding: 5px;
+        display: block;
+    }
+    .calendar-lava .calendar-month td.calendar-selected {
+        padding: 5px;
+    }
+    .calendar-lava .calendar {
+        padding: 0;
+        border-top: 3px solid #d8d1c8;
+        border-color: #d8d1c8;
+        border-radius: 0;
+        margin-bottom: 15px;
+    }
+    .calendar-lava .calendar-title {
+        color: #333;
+        background-color: #f5f5f5;
+        border-bottom: 1px solid #d8d1c8;
+    }
+    .calendar-lava .calendar-month {
+        background-color: #fcfaf8;
+    }
+    .calendar-lava .calendar-day-header {
+        background-color: #f5f5f5;
+        border-bottom: 1px solid #d8d1c8;
+    }
+    
+    .calendar-lava .panel-default {
+        border-color: #d8d1c8;
+    }
+    .calendar-lava .panel-default > .panel-heading {
+        color: #333;
+        background-color: #f5f5f5;
+        border-color: #d8d1c8;
+    }
+    
+    .calendar-lava .calendar-month .calendar-today,
+    .calendar-lava .datepicker table td.today {
+        background-color: #ddd !important;
+        color: #000 !important;
+    }
+</style>
+
+{% assign EventOne = EventItemOccurrences | First %}
+{% if EventOne != null %}
+    {% assign FirstDayOfWeek = EventOne.Date | DateAdd:-6,'d' | SundayDate %}
+    {% assign LastDayOfWeek = FirstDayOfWeek | DateAdd:6,'d' %}
+    
+    {% assign FirstDayOfWeek_Month = FirstDayOfWeek | Date:'MMMM' %}
+    {% assign LastDayOfWeek_Month = LastDayOfWeek | Date:'MMMM' %}
+    {% if FirstDayOfWeek_Month != LastDayOfWeek_Month %}{% assign showMonth = true %}{% endif %}
+    
+    {% assign FirstDayOfWeek_Year = FirstDayOfWeek | Date:'yyyy' %}
+    {% assign LastDayOfWeek_Year = LastDayOfWeek | Date:'yyyy' %}
+    {% if FirstDayOfWeek_Year != LastDayOfWeek_Year %}{% assign showYear = true %}{% endif %}
+    
+    <h2 class="text-center">{{ FirstDayOfWeek | Date:'MMMM d' }}{% if showYear %} {{ FirstDayOfWeek_Year }}{% endif %} - {% if showMonth %}{{ LastDayOfWeek_Month }} {% endif %}{{ LastDayOfWeek | Date:'d' }}{% if showYear %} {{ LastDayOfWeek_Year }}{% endif %}</h2>
+{% endif %}
+
+{% assign hasEvent = false %}
+{% capture calendarHtml %}
+    {% assign LastDate = '' %}
+    {% for OccurrenceSummary in EventItemOccurrences %}
+        
+        {% assign Approved = OccurrenceSummary.EventItemOccurrence | Attribute:'Approved' %}
+        {% if Approved == 'Approved' %}
+        
+            {% assign hasEvent = true %}
+        
+            {% assign NextDate = OccurrenceSummary.Date | Date:'yyyy-MM-dd' %}
+            
+            {% if LastDate != NextDate %}
+                {% if LastDate != '' %}
+        
+            </div>
+        </div>
+        
+                {% endif %}
+                
+        <div class="panel panel-default" id="events-{{ NextDate }}">
+            <div class="panel-heading">
+                <h2 class="panel-title">{{ NextDate | Date:'MMMM dd, yyyy' }}</h2>
+            </div>
+            <div class="list-group">
+                
+            {% endif %}
+            {% assign LastDate = NextDate %}
+            
+            {% assign itemId = OccurrenceSummary.EventItemOccurrence.Guid | Remove:'-' | Split:'' | Shuffle | Join:'' %}
+            <a href="/EventById/{{ OccurrenceSummary.EventItemOccurrence.Id }}" class="list-group-item">
+                <h4 class="list-group-item-heading">{{ OccurrenceSummary.Name }} <small>{{ OccurrenceSummary.Time }}</small></h4>
+            </a>
+    {% endif %}
+    
+{% endfor %}
+        
+        </div>
+    </div>
+{% endcapture %}    
+    
+    
+{% if hasEvent %}
+    {{ calendarHtml }}
+{% else %}
+    <div class="panel panel-default">
+        <div class="panel-body"> There are no events in this time frame.</div>
+    </div>
+{% endif %} 

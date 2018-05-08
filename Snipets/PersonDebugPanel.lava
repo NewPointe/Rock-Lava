@@ -1,3 +1,10 @@
+{% comment %}
+    
+    PersonDebugPanel.lava
+    
+    A simple "Debug" panel for a person's profile that lists their Id, AliasId, etc as well as links to act as them on the external or internal sites.
+
+{% endcomment %}
 <section class="panel panel-note">
 	<div class="panel-heading clearfix">
 		<h3 class="panel-title">
