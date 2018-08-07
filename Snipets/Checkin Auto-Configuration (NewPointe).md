@@ -18,13 +18,46 @@ Important Notes
 How to Set Up
 -------------
 Note: When modifying check-in pages, you might have to add `?Theme=Rock` to the URL to get access to the admin toolbar.
+1. Go to the SQL Command page (Admin Tools -> Power Tools -> SQL Command) and run the following query to add our custom function to the database:
+```sql
 
-1. Create a new Page on the "Rock Check-in" Site using the "Check-in" Layout.
-2. Open up the Page Properties, go to Avanced Settings, and add the following routes (You can use something other than `auto`, just make sure to update it in the lava settings):
+/****** Object:  UserDefinedFunction [dbo].[ufnNPCustom_GetChildGroupTypes]    Script Date: 8/7/2018 1:28:33 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[ufnNPCustom_GetChildGroupTypes] ( @TreeId int )
+RETURNS TABLE
+AS
+RETURN (
+	
+	WITH TreeCrawler as
+    (
+        SELECT G.Id
+        FROM [GroupType] G
+        WHERE G.Id = @TreeId
+        
+        UNION ALL
+        
+        SELECT G2.Id
+        FROM [GroupType] G2
+        INNER JOIN GroupTypeAssociation gta ON gta.ChildGroupTypeId = G2.Id
+        INNER JOIN TreeCrawler TC ON TC.ID = gta.GroupTypeId AND gta.GroupTypeId != gta.ChildGroupTypeId
+    )
+	SELECT Id From TreeCrawler
+)
+GO
+
+```
+
+2. Create a new Page on the "Rock Check-in" Site using the "Check-in" Layout.
+3. Open up the Page Properties, go to Avanced Settings, and add the following routes (You can use something other than `auto`, just make sure to update it in the lava settings):
    - auto
    - auto/{Campus}
    - auto/{Campus}/{Theme}
-3. Add a Dynamic Data Block to the page and configure it as follows:
+4. Add a Dynamic Data Block to the page and configure it as follows:
 
 #### Query
 
