@@ -20,14 +20,6 @@ How to Set Up
 Note: When modifying check-in pages, you might have to add `?Theme=Rock` to the URL to get access to the admin toolbar.
 1. Go to the SQL Command page (Admin Tools -> Power Tools -> SQL Command) and run the following query to add our custom function to the database:
 ```sql
-
-/****** Object:  UserDefinedFunction [dbo].[ufnNPCustom_GetChildGroupTypes]    Script Date: 8/7/2018 1:28:33 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE FUNCTION [dbo].[ufnNPCustom_GetChildGroupTypes] ( @TreeId int )
 RETURNS TABLE
 AS
@@ -48,8 +40,6 @@ RETURN (
     )
 	SELECT Id From TreeCrawler
 )
-GO
-
 ```
 
 2. Create a new Page on the "Rock Check-in" Site using the "Check-in" Layout.
