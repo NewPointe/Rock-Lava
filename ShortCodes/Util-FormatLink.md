@@ -10,7 +10,7 @@ Example Usage:
 ```
 Output:
 ```
-https://example.org/stuff/34/2853?DoThing=true
+https://example.org/test/34/2853?DoThing=true
 ```
 
 ## Shortcode Settings
